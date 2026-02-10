@@ -14,6 +14,7 @@ export default function App() {
 	const [questionInput, setQuestionInput] = useState("");
 
 	const [difficulty, setDifficulty] = useState<string>("Easy");
+	const [dragIndex, setDragIndex] = useState<number | null>(null);
 
 	const questions = useQuestionStore((s) => s.questions);
 	const topics = useQuestionStore((s) => s.topics);
@@ -215,8 +216,14 @@ export default function App() {
 							>
 								{topics.length === 0 && <p className="text-slate-500 ml-3">No topics added yet.</p>}
 
-								{topics.map((topic) => (
-									<TopicDiv key={topic.id} topic={topic} />
+								{topics.map((topic, index) => (
+									<TopicDiv
+										key={topic.id}
+										topic={topic}
+										index={index}
+										dragIndex={dragIndex}
+										setDragIndex={setDragIndex}
+									/>
 								))}
 							</div>
 						</div>
@@ -243,7 +250,17 @@ export default function App() {
 	);
 }
 
-const TopicDiv = ({ topic }: { topic: Topic }) => {
+const TopicDiv = ({
+	topic,
+	index,
+	dragIndex,
+	setDragIndex,
+}: {
+	topic: Topic;
+	index: number;
+	dragIndex: number | null;
+	setDragIndex: React.Dispatch<React.SetStateAction<number | null>>;
+}) => {
 	const [onOpen, setOnOpen] = useState(false);
 	const [subTopicTitle, setSubTopicTitle] = useState("");
 	const setTopics = useQuestionStore((s) => s.setTopics);
@@ -285,7 +302,9 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 						cursor-pointer
 						"
 				draggable
+				onDragOver={(e) => e.preventDefault()}
 				onDragStart={(e) => {
+					setDragIndex(index);
 					e.dataTransfer.setData(
 						"application/json",
 						JSON.stringify({
@@ -294,6 +313,22 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 							subtopics: topic.subTopics,
 						}),
 					);
+				}}
+				onDrop={() => {
+					if (dragIndex === null || dragIndex === index) return;
+
+					setTopics((prev) => {
+						const updated = [...prev];
+
+						const draggedItem = updated[dragIndex];
+
+						updated.splice(dragIndex, 1);
+						updated.splice(index, 0, draggedItem);
+
+						return updated;
+					});
+
+					setDragIndex(null);
 				}}
 			>
 				<h3 className="font-semibold">{topic.title}</h3>
@@ -365,7 +400,9 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 			onClick={() => setOnOpen((cur) => !cur)}
 			className="border border-slate-400 bg-gray-950 rounded-lg px-2 py-1 min-w-20 text-center flex gap-7 w-max cursor-pointer"
 			draggable
+			onDragOver={(e) => e.preventDefault()}
 			onDragStart={(e) => {
+				setDragIndex(index);
 				e.dataTransfer.setData(
 					"application/json",
 					JSON.stringify({
@@ -373,6 +410,22 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 						data: topic,
 					}),
 				);
+			}}
+			onDrop={() => {
+				if (dragIndex === null || dragIndex === index) return;
+
+				setTopics((prev) => {
+					const updated = [...prev];
+
+					const draggedItem = updated[dragIndex];
+
+					updated.splice(dragIndex, 1);
+					updated.splice(index, 0, draggedItem);
+
+					return updated;
+				});
+
+				setDragIndex(null);
 			}}
 		>
 			<h3 className="font-semibold">{topic.title}</h3>
