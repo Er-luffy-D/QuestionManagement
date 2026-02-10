@@ -5,19 +5,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "./components/ui/dialog";
 
-import type { Question } from "./types";
+import type { Question, Topic } from "./types";
 import { QuestionCard } from "./components/questionCard";
-
-type SubTopic = {
-	id: string;
-	title: string;
-};
-
-type Topic = {
-	id: string;
-	title: string;
-	subTopics: SubTopic[];
-};
 
 export default function App() {
 	const [questionInput, setQuestionInput] = useState("");
@@ -108,8 +97,6 @@ export default function App() {
 						{/* ---------------- TOPICS ---------------- */}
 
 						<div className="px-5 space-y-4">
-							{/* ADD TOPIC DIALOG */}
-
 							<Dialog>
 								<DialogTrigger asChild>
 									<Button className="bg-blue-600 hover:bg-blue-700 mx-2">Add Topic</Button>
@@ -159,6 +146,7 @@ export default function App() {
 								q={q}
 								deleteQuestion={deleteQuestion}
 								toggleComplete={toggleComplete}
+								setQuestion={setQuestions}
 							/>
 						))}
 					</div>
@@ -167,8 +155,6 @@ export default function App() {
 		</div>
 	);
 }
-
-/* ---------------- TOPIC DIV ---------------- */
 
 const TopicDiv = ({ topic, setTopics }: { topic: Topic; setTopics: React.Dispatch<React.SetStateAction<Topic[]>> }) => {
 	const [onOpen, setOnOpen] = useState(false);
@@ -202,13 +188,39 @@ const TopicDiv = ({ topic, setTopics }: { topic: Topic; setTopics: React.Dispatc
 			<div
 				onClick={() => setOnOpen((cur) => !cur)}
 				className="border border-slate-400 bg-gray-950 rounded-lg px-2 py-1 min-w-20 text-center flex gap-7 w-max cursor-pointer"
+				draggable
+				onDragStart={(e) => {
+					e.dataTransfer.setData(
+						"application/json",
+						JSON.stringify({
+							type: "topic",
+							data: topic,
+							subtopics: topic.subTopics,
+						}),
+					);
+				}}
 			>
 				<h3 className="font-semibold">{topic.title}</h3>
 
 				<div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
 					<div className="grid grid-cols-3 gap-2">
 						{topic.subTopics.map((subTopic) => (
-							<div key={subTopic.id} className="border-blue-500 border rounded-2xl w-max min-w-15">
+							<div
+								key={subTopic.id}
+								draggable
+								onDragStart={(e) => {
+									e.stopPropagation();
+
+									e.dataTransfer.setData(
+										"application/json",
+										JSON.stringify({
+											type: "subtopic",
+											data: subTopic,
+										}),
+									);
+								}}
+								className="border-blue-500 border rounded-2xl w-max min-w-15"
+							>
 								{subTopic.title}
 							</div>
 						))}
@@ -246,6 +258,16 @@ const TopicDiv = ({ topic, setTopics }: { topic: Topic; setTopics: React.Dispatc
 		<div
 			onClick={() => setOnOpen((cur) => !cur)}
 			className="border border-slate-400 bg-gray-950 rounded-lg px-2 py-1 min-w-20 text-center flex gap-7 w-max cursor-pointer"
+			draggable
+			onDragStart={(e) => {
+				e.dataTransfer.setData(
+					"application/json",
+					JSON.stringify({
+						type: "topic",
+						data: topic,
+					}),
+				);
+			}}
 		>
 			<h3 className="font-semibold">{topic.title}</h3>
 		</div>
