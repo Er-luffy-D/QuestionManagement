@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "./ui/button";
 import type { Question } from "../types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { useQuestionStore } from "@/store/useQuestionStore";
 
 export const QuestionCard = React.memo(
 	({
@@ -9,14 +10,13 @@ export const QuestionCard = React.memo(
 		index,
 		toggleComplete,
 		deleteQuestion,
-		setQuestion,
 	}: {
 		q: Question;
 		index: number;
 		toggleComplete: (id: string) => void;
 		deleteQuestion: (id: string) => void;
-		setQuestion: React.Dispatch<React.SetStateAction<Question[]>>;
 	}) => {
+		const setQuestion = useQuestionStore((s) => s.setQuestions);
 		return (
 			<div
 				onClick={() => toggleComplete(q.id)}

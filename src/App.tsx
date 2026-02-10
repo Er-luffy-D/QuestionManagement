@@ -7,14 +7,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 
 import type { Question, Topic } from "./types";
 import { QuestionCard } from "./components/questionCard";
+import { useQuestionStore } from "./store/useQuestionStore";
 
 export default function App() {
 	const [questionInput, setQuestionInput] = useState("");
 
 	const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">("Easy");
 
-	const [questions, setQuestions] = useState<Question[]>([]);
-	const [topics, setTopics] = useState<Topic[]>([]);
+	const questions = useQuestionStore((s) => s.questions);
+	const topics = useQuestionStore((s) => s.topics);
+
+	const setQuestions = useQuestionStore((s) => s.setQuestions);
+	const setTopics = useQuestionStore((s) => s.setTopics);
 
 	const addQuestion = useCallback(() => {
 		if (!questionInput.trim()) return;
@@ -28,15 +32,21 @@ export default function App() {
 
 		setQuestions((prev) => [...prev, newQuestion]);
 		setQuestionInput("");
-	}, [questionInput, difficulty]);
+	}, [questionInput, difficulty, setQuestions]);
 
-	const deleteQuestion = useCallback((id: string) => {
-		setQuestions((prev) => prev.filter((q) => q.id !== id));
-	}, []);
+	const deleteQuestion = useCallback(
+		(id: string) => {
+			setQuestions((prev) => prev.filter((q) => q.id !== id));
+		},
+		[setQuestions],
+	);
 
-	const toggleComplete = useCallback((id: string) => {
-		setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, completed: !q.completed } : q)));
-	}, []);
+	const toggleComplete = useCallback(
+		(id: string) => {
+			setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, completed: !q.completed } : q)));
+		},
+		[setQuestions],
+	);
 
 	const [topicTitle, setTopicTitle] = useState("");
 
@@ -128,7 +138,7 @@ export default function App() {
 								{topics.length === 0 && <p className="text-slate-500 ml-3">No topics added yet.</p>}
 
 								{topics.map((topic) => (
-									<TopicDiv key={topic.id} topic={topic} setTopics={setTopics} />
+									<TopicDiv key={topic.id} topic={topic} />
 								))}
 							</div>
 						</div>
@@ -146,7 +156,6 @@ export default function App() {
 								q={q}
 								deleteQuestion={deleteQuestion}
 								toggleComplete={toggleComplete}
-								setQuestion={setQuestions}
 							/>
 						))}
 					</div>
@@ -156,10 +165,10 @@ export default function App() {
 	);
 }
 
-const TopicDiv = ({ topic, setTopics }: { topic: Topic; setTopics: React.Dispatch<React.SetStateAction<Topic[]>> }) => {
+const TopicDiv = ({ topic }: { topic: Topic }) => {
 	const [onOpen, setOnOpen] = useState(false);
 	const [subTopicTitle, setSubTopicTitle] = useState("");
-
+	const setTopics = useQuestionStore((s) => s.setTopics);
 	const handleAddSubTopic = () => {
 		if (!subTopicTitle.trim()) return;
 
