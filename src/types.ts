@@ -1,7 +1,7 @@
 export type Question = {
 	id: string;
 	title: string;
-	difficulty: "Easy" | "Medium" | "Hard";
+	difficulty: string;
 	completed: boolean;
 	subTopics?: SubTopic[];
 	Topics?: Topic[];

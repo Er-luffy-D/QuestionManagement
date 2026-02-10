@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import type { Question, Topic } from "./types";
 import { QuestionCard } from "./components/questionCard";
 import { useQuestionStore } from "./store/useQuestionStore";
+import SheetData from "@/data/sheet.json";
 
 export default function App() {
 	const [questionInput, setQuestionInput] = useState("");
 
-	const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">("Easy");
+	const [difficulty, setDifficulty] = useState<string>("Easy");
 
 	const questions = useQuestionStore((s) => s.questions);
 	const topics = useQuestionStore((s) => s.topics);
@@ -65,11 +66,75 @@ export default function App() {
 		setTopicTitle("");
 	};
 
+	const handleUpdateData = () => {
+		SheetData.data.questions.forEach((entry) => {
+			const question = {
+				id: entry.questionId._id,
+				title: entry.questionId.name,
+				difficulty: entry.questionId.difficulty as "Easy" | "Medium" | "Hard",
+				completed: !!entry.isSolved,
+
+				Topics: [
+					{
+						id: crypto.randomUUID(),
+						title: entry.topic,
+						subTopics: [],
+					},
+				],
+
+				subTopics: [
+					{
+						id: crypto.randomUUID(),
+						title: entry.subTopic,
+					},
+				],
+			};
+
+			setQuestions((prev) => [...prev, question]);
+
+			setTopics((prev) => {
+				const existingTopic = prev.find((t) => t.title === entry.topic);
+
+				if (existingTopic) {
+					if (!existingTopic.subTopics.find((st) => st.title === entry.subTopic)) {
+						existingTopic.subTopics.push({
+							id: crypto.randomUUID(),
+							title: entry.subTopic,
+						});
+					}
+
+					return [...prev];
+				}
+
+				return [
+					...prev,
+					{
+						id: crypto.randomUUID(),
+						title: entry.topic,
+						subTopics: [
+							{
+								id: crypto.randomUUID(),
+								title: entry.subTopic,
+							},
+						],
+					},
+				];
+			});
+		});
+	};
+
 	return (
 		<div className="h-full text-white">
-			<div className="h-15 bg-[#161619] border-b-2 border-slate-400/25" />
+			<div className="h-15 bg-[#161619] border-b-2 border-slate-400/25">
+				<Button
+					onClick={handleUpdateData}
+					className="absolute right-0 hover:bg-red-500/50 bg-red-500/50 cursor-pointer backdrop-blur-2xl top-1 m-2"
+				>
+					Populate Data
+				</Button>
+			</div>
 
-			<div className="h-screen bg-[#111010]">
+			<div className="h-full min-h-screen bg-[#111010]">
 				<div className="p-5">
 					<h1 className="text-3xl">Questions</h1>
 					<h2 className="text-lg">Keep track of all your questions here</h2>
@@ -134,7 +199,20 @@ export default function App() {
 
 							<p className="text-slate-300 pl-2">Topics :</p>
 
-							<div className="flex gap-3 ml-2 bg-slate-700/80 p-2 rounded-2xl">
+							<div
+								className="ml-2
+							bg-slate-700/80
+							p-3
+							rounded-2xl
+
+							flex flex-wrap gap-3
+							max-h-65
+							overflow-y-auto
+
+							scrollbar-thin
+							scrollbar-thumb-slate-600
+							scrollbar-track-transparent"
+							>
 								{topics.length === 0 && <p className="text-slate-500 ml-3">No topics added yet.</p>}
 
 								{topics.map((topic) => (
@@ -196,7 +274,16 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 		return (
 			<div
 				onClick={() => setOnOpen((cur) => !cur)}
-				className="border border-slate-400 bg-gray-950 rounded-lg px-2 py-1 min-w-20 text-center flex gap-7 w-max cursor-pointer"
+				className="
+						border border-slate-400
+						bg-gray-950
+						rounded-lg
+						px-3 py-2
+						min-w-32
+						max-w-130
+						flex gap-4
+						cursor-pointer
+						"
 				draggable
 				onDragStart={(e) => {
 					e.dataTransfer.setData(
@@ -212,7 +299,7 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 				<h3 className="font-semibold">{topic.title}</h3>
 
 				<div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
-					<div className="grid grid-cols-3 gap-2">
+					<div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-105">
 						{topic.subTopics.map((subTopic) => (
 							<div
 								key={subTopic.id}
@@ -228,7 +315,17 @@ const TopicDiv = ({ topic }: { topic: Topic }) => {
 										}),
 									);
 								}}
-								className="border-blue-500 border rounded-2xl w-max min-w-15"
+								className="
+									border border-blue-500
+									rounded-xl
+									px-3 py-1
+									text-xs
+									max-w-40
+									wrap-break-word
+									whitespace-normal
+									text-center
+									bg-blue-500/10
+									"
 							>
 								{subTopic.title}
 							</div>
